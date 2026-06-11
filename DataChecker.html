@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATA INSPECTION PROTOCOL</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #2b2b2b 0%, #1a1a1a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            padding: 60px 20px;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-weight: 200;
+            font-size: 32px;
+            letter-spacing: 6px;
+            margin-bottom: 10px;
+            color: #f0f0f0;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        p.subtitle {
+            font-weight: 300;
+            font-size: 12px;
+            line-height: 2;
+            color: #888888;
+            margin-bottom: 50px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .radio-group label {
+            cursor: pointer;
+            font-weight: 300;
+            font-size: 13px;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+        
+        .radio-group label:hover { color: #fff; }
+        .radio-group input[type="radio"] { accent-color: #c5a059; }
+
+        .inputs-row {
+            display: flex;
+            gap: 30px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group label {
+            font-size: 11px;
+            color: #777;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        input[type="file"], select, input[type="number"] {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 12px;
+            font-size: 13px;
+            font-family: inherit;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #ccc;
+            padding: 5px 15px;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        input[type="file"]::file-selector-button:hover { color: #fff; border-color: #fff; }
+        input:focus, select:focus { border-color: #c5a059; }
+        select option { background: #1a1a1a; color: #fff; }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            letter-spacing: 2px;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn:hover:not(:disabled) {
+            border-color: #ffffff;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn:disabled { border-color: #444; color: #666; cursor: not-allowed; }
+        
+        .btn.active {
+            border-color: #c5a059;
+            color: #c5a059;
+            cursor: default;
+            background: rgba(197, 160, 89, 0.05);
+        }
+
+        /* プログレスバー */
+        .progress-bar {
+            width: 100%;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin-top: 30px;
+            display: none;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #c5a059;
+            width: 0%;
+            transition: width 0.2s;
+            box-shadow: 0 0 10px #c5a059;
+        }
+        
+        .status {
+            margin-top: 15px;
+            font-size: 11px;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* 結果エリア */
+        .results { margin-top: 40px; display: none; width: 100%; }
+        
+        h3 {
+            font-weight: 300;
+            font-size: 16px;
+            letter-spacing: 3px;
+            color: #e0e0e0;
+            margin-top: 40px;
+            border-left: 2px solid #c5a059;
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+        th, td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 10px;
+            text-align: left;
+            color: #aaa;
+        }
+        th {
+            color: #c5a059;
+            font-weight: 400;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+        }
+        tr:hover td { background: rgba(255, 255, 255, 0.02); color: #fff; }
+        
+        .highlight-error { color: #ff6b6b; font-weight: 400; }
+        
+        .success-msg {
+            color: #c5a059;
+            font-weight: 300;
+            font-size: 13px;
+            padding: 20px;
+            border: 1px solid rgba(197, 160, 89, 0.2);
+            text-align: center;
+            letter-spacing: 2px;
+            background: rgba(197, 160, 89, 0.05);
+            text-transform: uppercase;
+        }
+
+        /* 装飾ライン */
+        .horizon-line {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.2));
+            margin: 40px auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>DATA INSPECTION PROTOCOL</h1>
+    <p class="subtitle">SSIS Truncation & Shift Analysis System</p>
+    
+    <div class="panel">
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="checkMode" value="mode_length" checked onchange="toggleMode()"> 
+                [ M-01 ] TARGET LENGTH SCAN
+            </label>
+            <label>
+                <input type="radio" name="checkMode" value="mode_columns" onchange="toggleMode()"> 
+                [ M-02 ] COLUMN SHIFT SCAN
+            </label>
+        </div>
+
+        <div class="inputs-row">
+            <div class="input-group">
+                <label>SOURCE FILE</label>
+                <input type="file" id="fileInput" accept=".dat,.csv,.tsv,.txt">
+            </div>
+
+            <div class="input-group">
+                <label>DELIMITER</label>
+                <select id="sepInput">
+                    <option value="tab">TAB ( \t )</option>
+                    <option value="comma">COMMA ( , )</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>ENCODING</label>
+                <select id="encodingInput">
+                    <option value="shift-jis">SHIFT-JIS</option>
+                    <option value="utf-8">UTF-8</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="colInputWrapper">
+                <label>TARGET COL</label>
+                <input type="number" id="colInput" value="17" min="1">
+            </div>
+
+            <button id="startBtn" class="btn" onclick="processFile()">INITIALIZE SCAN</button>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="status" id="statusText">System Idle • Waiting for input</div>
+    </div>
+
+    <div class="results" id="resultsArea">
+        <div id="resultModeLength" style="display: none;">
+            <h3>🚨 LENGTH RANKING (TOP 20) | COL: <span id="targetColLabel" style="color:#fff;"></span></h3>
+            <table id="lengthTable">
+                <thead><tr><th style="width: 10%;">LINE NO.</th><th style="width: 10%;">BYTES</th><th style="width: 15%;">TOTAL COLS</th><th>DATA FRAGMENT</th></tr></thead>
+                <tbody id="lengthTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="resultModeColumns" style="display: none;">
+            <h3>⚠️ SHIFT WARNING REPORT</h3>
+            <p style="font-size: 13px; color: #888; letter-spacing: 1px;">DETECTED STANDARD COLS: <strong id="standardColCount" style="color: #c5a059; font-size: 16px; font-weight:400;">-</strong></p>
+            <div id="colSuccessMsg" class="success-msg" style="display: none;">ALL COLUMNS ALIGNED. NO SHIFT DETECTED.</div>
+            <table id="colErrorTable">
+                <thead><tr><th style="width: 10%;">LINE NO.</th><th style="width: 15%;">ACTUAL COLS</th><th>FULL ROW CONTENT (TRUNCATED)</th></tr></thead>
+                <tbody id="colErrorTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="horizon-line"></div>
+</div>
+
+<script>
+    function toggleMode() {
+        const mode = document.querySelector('input[name="checkMode"]:checked').value;
+        document.getElementById('colInputWrapper').style.display = (mode === 'mode_length') ? 'flex' : 'none';
+    }
+
+    function getByteLength(str, encoding) {
+        if (encoding === 'utf-8') {
+            return new TextEncoder().encode(str).length;
+        } else {
+            let len = 0;
+            for (let i = 0; i < str.length; i++) {
+                let c = str.charCodeAt(i);
+                if ((c >= 0x0 && c <= 0x7F) || (c >= 0xFF61 && c <= 0xFF9F)) len += 1;
+                else len += 2;
+            }
+            return len;
+        }
+    }
+
+    async function guessStandardColumnCount(file, separator, encoding) {
+        const slice = file.slice(0, 2 * 1024 * 1024); 
+        const buffer = await slice.arrayBuffer();
+        const decoder = new TextDecoder(encoding);
+        const text = decoder.decode(buffer);
+        
+        const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+        let colCounts = {};
+        let validLines = 0;
+        
+        for (let i = 0; i < lines.length; i++) {
+            if (!lines[i]) continue;
+            const cols = lines[i].split(separator).length;
+            colCounts[cols] = (colCounts[cols] || 0) + 1;
+            validLines++;
+            if (validLines >= 1000) break; 
+        }
+        
+        if (validLines === 0) return 0;
+        return parseInt(Object.keys(colCounts).reduce((a, b) => colCounts[a] > colCounts[b] ? a : b));
+    }
+
+    async function processFile() {
+        const fileInput = document.getElementById('fileInput');
+        const mode = document.querySelector('input[name="checkMode"]:checked').value;
+        const encoding = document.getElementById('encodingInput').value;
+        const separator = document.getElementById('sepInput').value === 'tab' ? '\t' : ',';
+        const startBtn = document.getElementById('startBtn');
+        
+        if (!fileInput.files.length) { alert('FILE NOT SELECTED.'); return; }
+
+        const file = fileInput.files[0];
+        let targetCol = 0;
+        if (mode === 'mode_length') {
+            targetCol = parseInt(document.getElementById('colInput').value);
+            if(isNaN(targetCol) || targetCol <= 0) { alert('INVALID COLUMN NUMBER.'); return; }
+        }
+
+        // UI設定
+        startBtn.disabled = true;
+        startBtn.innerText = "SCANNING...";
+        startBtn.classList.add("active");
+        document.getElementById('progressBar').style.display = 'block';
+        document.getElementById('progressFill').style.width = '0%';
+        document.getElementById('resultsArea').style.display = 'none';
+        document.getElementById('resultModeLength').style.display = 'none';
+        document.getElementById('resultModeColumns').style.display = 'none';
+        document.getElementById('colSuccessMsg').style.display = 'none';
+        document.getElementById('colErrorTable').style.display = 'table';
+        const statusText = document.getElementById('statusText');
+        
+        let standardColCount = 0;
+        
+        if (mode === 'mode_columns') {
+            statusText.innerText = 'CALCULATING STANDARD COLUMNS...';
+            standardColCount = await guessStandardColumnCount(file, separator, encoding);
+            document.getElementById('standardColCount').innerText = standardColCount;
+        }
+
+        statusText.style.color = '#c5a059';
+        statusText.innerText = 'SCANNING CORE DATA STRUCTURE...';
+        
+        const CHUNK_SIZE = 10 * 1024 * 1024; 
+        let offset = 0, lineCount = 0, leftover = "";
+        const decoder = new TextDecoder(encoding);
+        
+        let lengthsRanking = [];
+        let colErrorRows = [];
+
+        try {
+            while (offset < file.size) {
+                const chunk = file.slice(offset, offset + CHUNK_SIZE);
+                const buffer = await chunk.arrayBuffer();
+                const text = decoder.decode(buffer, { stream: true });
+                
+                let combined = leftover + text;
+                combined = combined.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                const lines = combined.split('\n');
+                leftover = lines.pop(); 
+
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    if (!line) continue;
+                    lineCount++;
+
+                    const cols = line.split(separator);
+                    const currentCols = cols.length;
+
+                    if (mode === 'mode_columns') {
+                        if (currentCols !== standardColCount && colErrorRows.length < 100) {
+                            colErrorRows.push({ lineNum: lineCount, colCount: currentCols, content: line });
+                        }
+                    }
+
+                    if (mode === 'mode_length') {
+                        if (currentCols >= targetCol) {
+                            const val = cols[targetCol - 1];
+                            lengthsRanking.push({ lineNum: lineCount, byteLen: getByteLength(val, encoding), colCount: currentCols, val: val });
+                        } else {
+                            lengthsRanking.push({ lineNum: lineCount, byteLen: -1, colCount: currentCols, val: "[ DATA MISSING ]" });
+                        }
+                        if (lengthsRanking.length > 500) {
+                            lengthsRanking.sort((a, b) => b.byteLen - a.byteLen);
+                            lengthsRanking = lengthsRanking.slice(0, 25);
+                        }
+                    }
+                }
+
+                offset += CHUNK_SIZE;
+                document.getElementById('progressFill').style.width = Math.min(100, Math.round((offset / file.size) * 100)) + '%';
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            if (leftover) {
+                lineCount++;
+                const cols = leftover.split(separator);
+                if (mode === 'mode_columns' && cols.length !== standardColCount && colErrorRows.length < 100) {
+                    colErrorRows.push({ lineNum: lineCount, colCount: cols.length, content: leftover });
+                }
+            }
+
+            document.getElementById('resultsArea').style.display = 'block';
+
+            if (mode === 'mode_length') {
+                lengthsRanking.sort((a, b) => b.byteLen - a.byteLen);
+                document.getElementById('targetColLabel').innerText = targetCol;
+                const tbody = document.getElementById('lengthTableBody');
+                tbody.innerHTML = '';
+                lengthsRanking.slice(0, 20).forEach(item => {
+                    const tr = document.createElement('tr');
+                    const valDisplay = item.val.length > 80 ? item.val.substring(0, 80) + '...' : item.val;
+                    tr.innerHTML = `<td>${item.lineNum}</td><td style="color: #c5a059;">${item.byteLen === -1 ? '-' : item.byteLen}</td><td>${item.colCount}</td><td style="color:#fff;">${valDisplay}</td>`;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('resultModeLength').style.display = 'block';
+            } 
+            else if (mode === 'mode_columns') {
+                const tbody = document.getElementById('colErrorTableBody');
+                tbody.innerHTML = '';
+                if (colErrorRows.length === 0) {
+                    document.getElementById('colErrorTable').style.display = 'none';
+                    document.getElementById('colSuccessMsg').style.display = 'block';
+                } else {
+                    colErrorRows.forEach(item => {
+                        const tr = document.createElement('tr');
+                        const textDisplay = item.content.length > 100 ? item.content.substring(0, 100) + '...' : item.content;
+                        tr.innerHTML = `<td>${item.lineNum}</td><td class="highlight-error">${item.colCount}</td><td style="color:#aaa;">${textDisplay}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                }
+                document.getElementById('resultModeColumns').style.display = 'block';
+            }
+
+            statusText.style.color = '#888';
+            statusText.innerText = 'System Idle • Scan Complete';
+
+        } catch (error) {
+            statusText.style.color = '#ff6b6b';
+            statusText.innerText = `ERROR: ${error.message}`;
+        } finally {
+            startBtn.disabled = false;
+            startBtn.innerText = "INITIALIZE SCAN";
+            startBtn.classList.remove("active");
+            document.getElementById('progressFill').style.width = '100%';
+        }
+    }
+</script>
+
+</body>
+</html>
